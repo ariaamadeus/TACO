@@ -29,35 +29,36 @@ scene_anns = dataset['scene_annotations']
 #nr_testing_images = int(nr_images*args.test_percentage*0.01+0.5)
 #nr_nontraining_images = int(nr_images*(args.test_percentage+args.val_percentage)*0.01+0.5)
 
+# The real split dataset
 picked_cat = ["Other plastic bottle", "Clear plastic bottle", "Disposable plastic cup", 
               "Disposable food container", "Other plastic container"]
+categ_id = []
 
+categ = {'images': [],
+        'annotations': [],
+        'categories': [],
+        }
+
+for split_cat in dataset['categories']:
+    if split_cat['name'] in picked_cat:
+        categ_id.append(split_cat['id'])
+for split_cat in dataset['annotations']:
+    if split_cat['category_id'] in categ_id:
+        categ['annotations'].append(split_cat)
+for split_cat in dataset['images']:
+    for split_img in categ['annotations']:
+        if split_img['image_id'] == split_cat['id']:
+            categ['images'].append(split_cat)
+
+anns = categ['annotations']
+imgs = categ['images']
+nr_images = len(imgs)
+
+nr_testing_images = int(nr_images*args.test_percentage*0.01+0.5)
+nr_nontraining_images = int(nr_images*(args.test_percentage+args.val_percentage)*0.01+0.5)
 for i in range(args.nr_trials):
     random.shuffle(imgs)
-
-    # The real split dataset
-    categ_id = []
-    categ = {'images': [],
-            'annotations': [],
-            'categories': [],
-            }
-
-    for split_cat in dataset['categories']:
-        if split_cat['name'] in picked_cat:
-            categ_id.append(split_cat['id'])
-    for split_cat in dataset['annotations']:
-        if split_cat['category_id'] in categ_id:
-            categ['annotations'].append(split_cat)
-    for split_cat in dataset['images']:
-        for split_img in categ['annotations']:
-            if split_img['image_id'] == split_cat['id']:
-                categ['images'].append(split_cat)
-    anns = categ['annotations']
-    imgs = categ['images']
-    nr_images = len(imgs)
-
-    nr_testing_images = int(nr_images*args.test_percentage*0.01+0.5)
-    nr_nontraining_images = int(nr_images*(args.test_percentage+args.val_percentage)*0.01+0.5)
+    
     # Add new datasets
     train_set = {
         'info': None,
@@ -76,7 +77,7 @@ for i in range(args.nr_trials):
     val_set = copy.deepcopy(train_set)
     test_set = copy.deepcopy(train_set)
 
-    test_set['images'] = categ[0:nr_testing_images]
+    test_set['images'] = imgs[0:nr_testing_images]
     val_set['images'] = imgs[nr_testing_images:nr_nontraining_images]
     train_set['images'] = imgs[nr_nontraining_images:nr_images]
 
