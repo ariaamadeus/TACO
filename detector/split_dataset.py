@@ -41,6 +41,7 @@ categ = {'images': [],
 
 for split_cat in dataset['categories']:
     if split_cat['name'] in picked_cat:
+        categ['categories'].append(split_cat)
         categ_id.append(split_cat['id'])
 for split_cat in dataset['annotations']:
     if split_cat['category_id'] in categ_id:
